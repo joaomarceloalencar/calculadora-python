@@ -1,0 +1,36 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Calculadora DevOps</title>
+    <style>
+        body { font-family: sans-serif; max-width: 360px; margin: 48px auto; }
+        input, select, button { display: block; width: 100%; margin: 8px 0; padding: 10px; box-sizing: border-box; }
+        button { background: #2c7; color: #fff; border: 0; cursor: pointer; font-size: 1em; }
+        .resultado { font-size: 1.4em; margin-top: 20px; }
+        .erro { color: #c0392b; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Calculadora DevOps</h1>
+    <form method="post">
+        <input type="number" step="any" name="a" placeholder="Primeiro número" required>
+        <select name="operacao">
+            <option value="somar">Somar (+)</option>
+            <option value="subtrair">Subtrair (−)</option>
+            <option value="multiplicar">Multiplicar (×)</option>
+            <option value="dividir">Dividir (÷)</option>
+        </select>
+        <input type="number" step="any" name="b" placeholder="Segundo número" required>
+        <button type="submit">Calcular</button>
+    </form>
+
+    {% if resultado is not none %}
+    <div class="resultado">Resultado: {{ resultado }}</div>
+    {% endif %}
+    {% if erro %}
+    <div class="erro">Erro: {{ erro }}</div>
+    {% endif %}
+</body>
+</html>

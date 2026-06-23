@@ -1,0 +1,49 @@
+# .github/workflows/ci-cd.yml
+name: CI/CD Calculadora
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ---------- Job 1: construir a imagem e testar ----------
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Validar a construção da imagem Docker
+        run: docker build -t calculadora-python:ci .
+
+      - name: Testar as operações aritméticas
+        run: docker run --rm calculadora-python:ci pytest tests/ -v
+
+  # ---------- Job 2: implantar na EC2 ----------
+  deploy:
+    needs: build-and-test          # só roda se o job anterior passar
+    if: github.ref == 'refs/heads/main'   # e apenas em push no main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar a chave SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Copiar o código para a EC2
+        run: |
+          rsync -avz --delete --exclude='.git' \
+            -e "ssh -i ~/.ssh/id_rsa" \
+            ./ "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/calculadora-python/"
+
+      - name: Construir a imagem e recarregar a aplicação
+        run: |
+          ssh -i ~/.ssh/id_rsa "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
+            "cd ~/calculadora-python && docker compose up -d --build"

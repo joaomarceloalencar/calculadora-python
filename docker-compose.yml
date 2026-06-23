@@ -1,0 +1,8 @@
+# docker-compose.yml
+services:
+  web:
+    build: .
+    image: calculadora-python:latest
+    ports:
+      - "80:8000"
+    restart: unless-stopped
